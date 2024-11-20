@@ -10,7 +10,8 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import base64
 from email.mime.text import MIMEText
-import pyttsx3  # Add this import for TTS
+import pyttsx3
+from gmail_assistant.config.secrets import GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REDIRECT_URI
 
 # Gmail API setup
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
@@ -31,8 +32,18 @@ def authenticate_gmail():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_config(
+                {
+                    'installed': {
+                        'client_id': GMAIL_CLIENT_ID,
+                        'client_secret': GMAIL_CLIENT_SECRET,
+                        'redirect_uris': [GMAIL_REDIRECT_URI],
+                        'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+                        'token_uri': 'https://oauth2.googleapis.com/token'
+                    }
+                },
+                SCOPES
+            )
             creds = flow.run_local_server(port=0)
         with open('token.json', 'w') as token:
             token.write(creds.to_json())

@@ -67,4 +67,10 @@ docker-compose.override.yml
 
 # Selenium
 geckodriver.log
-chromedriver.log 
+chromedriver.log
+
+# Gmail Assistant
+gmail_assistant/config/secrets.py
+client_secret*.json
+secrets.py
+**/secrets.py 
