@@ -48,6 +48,16 @@ token.json
 token.pickle
 *.credentials.json
 
+# Environments
+.env
+.env.*/
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # Environment variables
 .env
 .env.local
