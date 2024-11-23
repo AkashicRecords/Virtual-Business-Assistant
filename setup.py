@@ -5,8 +5,7 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
-        "speech_recognition",
-        "PyAudio",
+        "SpeechRecognition",
         "pyttsx3",
         "google-auth-oauthlib",
         "google-auth-httplib2",
@@ -16,11 +15,24 @@ setup(
         "pillow",
         "python-dotenv",
         "email-validator",
-        "requests"
+        "requests",
+        "pyinstaller",
+        "spacy",
+        "transformers",
+        "scikit-learn",
+        "sentence-transformers",
+        "textblob",
+        "gensim",
+        "pytorch",
+        "chromadb",
+        "faiss-cpu",
+        "python-dateutil",
+        "pytz",
+        "regex"
     ],
     entry_points={
         'console_scripts': [
             'gmail-assistant=gmail_assistant.gui:main',
         ],
     }
-) 
+)

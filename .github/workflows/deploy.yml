@@ -1,0 +1,123 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        pip install -e .
+
+    - name: Run tests
+      run: pytest tests/ --cov=gmail_assistant
+
+  build-artifacts:
+    needs: build-and-test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            artifact_name: Gmail-Voice-Assistant.dmg
+            test_command: "./Gmail Voice Assistant.app/Contents/MacOS/Gmail Voice Assistant --version"
+          - os: windows-latest
+            artifact_name: Gmail-Voice-Assistant-Setup.exe
+            test_command: "Gmail Voice Assistant.exe --version"
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build executable
+      run: python build.py
+
+    - name: Test executable
+      run: |
+        cd dist
+        ${{ matrix.test_command }}
+        
+    - name: Verify dependencies
+      run: |
+        if [ "${{ matrix.os }}" = "macos-latest" ]; then
+          otool -L "dist/Gmail Voice Assistant.app/Contents/MacOS/Gmail Voice Assistant"
+        else
+          echo "Skipping dependency verification on Windows"
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: dist/*
+
+  smoke-test:
+    needs: build-artifacts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    
+    steps:
+    - uses: actions/download-artifact@v3
+      
+    - name: Basic smoke test
+      run: |
+        if [ "${{ matrix.os }}" = "macos-latest" ]; then
+          chmod +x "Gmail Voice Assistant.app/Contents/MacOS/Gmail Voice Assistant"
+          "./Gmail Voice Assistant.app/Contents/MacOS/Gmail Voice Assistant" --help
+        else
+          "./Gmail Voice Assistant.exe" --help
+        fi
+
+  create-release:
+    needs: [build-artifacts, smoke-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          Gmail-Voice-Assistant.dmg/*
+          Gmail-Voice-Assistant-Setup.exe/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        fail_on_unmatched_files: true 

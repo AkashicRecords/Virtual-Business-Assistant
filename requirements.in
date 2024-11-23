@@ -1,0 +1,29 @@
+# Core dependencies with version constraints
+SpeechRecognition==3.11.0
+pyttsx3==2.90
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.1.1
+google-api-python-client==2.154.0
+nltk==3.8.1
+customtkinter==5.2.2
+pillow>=10.0.0,<11.0.0
+python-dotenv==1.0.1
+email-validator==2.1.0
+requests>=2.31.0,<3.0.0
+
+# NLP and ML
+spacy==3.7.4
+transformers==4.38.2
+scikit-learn==1.4.1.post1
+sentence-transformers==2.5.1
+textblob==0.18.0.post0
+gensim==4.3.2
+
+# Vector storage
+chromadb==0.4.24
+faiss-cpu==1.8.0
+
+# Utilities
+python-dateutil==2.9.0.post0
+pytz==2024.1
+regex==2023.12.25 

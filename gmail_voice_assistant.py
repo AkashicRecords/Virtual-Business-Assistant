@@ -38,7 +38,7 @@ def authenticate_gmail():
                         'client_id': GMAIL_CLIENT_ID,
                         'client_secret': GMAIL_CLIENT_SECRET,
                         'redirect_uris': [GMAIL_REDIRECT_URI],
-                        'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+                        'auth_uri': 'https://accounts.googlehttps://www.thaifriendly.com/Xxbeauty57.com/o/oauth2/auth',
                         'token_uri': 'https://oauth2.googleapis.com/token'
                     }
                 },

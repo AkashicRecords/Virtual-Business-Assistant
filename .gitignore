@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -22,8 +23,12 @@ wheels/
 
 # Virtual Environment
 venv/
-env/
 ENV/
+.env
+.venv
+env/
+env.bak/
+venv.bak/
 
 # IDE
 .idea/
@@ -33,54 +38,85 @@ ENV/
 .project
 .pydevproject
 .settings/
+*.sublime-workspace
+*.sublime-project
+
+# Project specific
+gmail_assistant/resources/credentials.json
+gmail_assistant/resources/token.pickle
+gmail_assistant/resources/*.log
+gmail_assistant/resources/app.log
+*.log
+.env
+.env.*
+
+# Build artifacts
+*.spec
+dist/
+build/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
 
 # Testing
 .coverage
-htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
 .pytest_cache/
+htmlcov/
 .tox/
+.coverage
+.coverage.*
 nosetests.xml
 coverage.xml
-
-# Gmail API credentials and tokens
-credentials.json
-token.json
-token.pickle
-*.credentials.json
-
-# Environments
-.env
-.env.*/
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Logs
-*.log
-logs/
+*.cover
+.hypothesis/
 
 # OS specific
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
 # Docker
 .docker/
 docker-compose.override.yml
 
-# Selenium
-geckodriver.log
-chromedriver.log
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Gmail Assistant
-gmail_assistant/config/secrets.py
-client_secret*.json
-secrets.py
-**/secrets.py 
+# Local development
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Security
+*.pem
+*.key
+*.cert
+*.crt
+*.cer
+*.der
+*.p7b
+*.p7c
+*.pfx
+*.p12
+
+# Model files
+*.gguf
+*.bin
+*.pt
+*.pth
+*.onnx
+models/ 
