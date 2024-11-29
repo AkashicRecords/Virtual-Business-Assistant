@@ -11,18 +11,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-2
-
-    - name: Deploy to g4dn.xlarge
+    - name: Configure Vultr credentials
+      env:
+        VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
       run: |
-        # Deploy to GPU-enabled instance
-        aws ec2 run-instances \
-          --image-id ami-gpu-enabled \
-          --instance-type g4dn.xlarge \
-          --key-name ${{ secrets.AWS_KEY_NAME }} \
-          --security-group-ids ${{ secrets.AWS_SECURITY_GROUP }}
+        # Install Vultr CLI
+        curl -fsSL https://download.vultr.com/vultr-cli/install.sh | bash
+
+    - name: Deploy to Vultr GPU instance
+      run: |
+        vultr-cli instance create \
+          --plan vhf-6c-32gb-1rtxa6000 \
+          --region ewr \
+          --os 387 \  # Ubuntu 20.04
+          --label "gmail-assistant-gpu" \
+          --tag "production"

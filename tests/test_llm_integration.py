@@ -1,20 +1,18 @@
 import pytest
-from gmail_assistant.llm_handler import LLMHandler
+from unittest.mock import patch
+from gmail_assistant.llm.ollama_handler import OllamaHandler
 
-class TestLLMFeatures:
+class TestOllamaIntegration:
     @pytest.fixture
-    def llm_handler(self):
-        return LLMHandler()
+    def ollama_handler(self):
+        return OllamaHandler()
 
-    def test_email_generation(self, llm_handler):
-        """Test LLM email generation"""
-        prompt = "Write a project update email"
-        context = {
-            "project": "Website Redesign",
-            "recent_updates": ["Design completed", "Testing started"]
+    @patch('requests.post')
+    def test_command_analysis(self, mock_post, ollama_handler):
+        """Test LLM command analysis"""
+        mock_post.return_value.json.return_value = {
+            'response': 'Command intent: read email'
         }
         
-        response = llm_handler.generate_email(prompt, context)
-        assert "Website Redesign" in response
-        assert "Design" in response
-        assert "Testing" in response 
+        result = ollama_handler.analyze_command("read my latest email")
+        assert "read email" in result.lower() 

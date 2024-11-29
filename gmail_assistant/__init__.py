@@ -1,6 +1,5 @@
 """Gmail Voice Assistant package."""
-from .voice_assistant import GmailVoiceAssistant
-from .gui import main
+from .gmail_voice_assistant_gui import GmailAssistantGUI, main
 
 __version__ = "0.1.0"
-__all__ = ['GmailVoiceAssistant', 'main'] 
+__all__ = ['GmailAssistantGUI', 'main'] 

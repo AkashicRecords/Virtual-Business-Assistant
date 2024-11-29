@@ -17,3 +17,7 @@ TOKEN_PATH = os.path.join(RESOURCES_DIR, 'token.pickle')
 # GUI settings
 WINDOW_SIZE = "800x600"
 DARK_MODE = True 
+
+# Remove the explicit OAuth port config since Desktop app handles it
+# OAUTH_PORT = 8080
+# OAUTH_REDIRECT_URI = f"http://localhost:{OAUTH_PORT}"

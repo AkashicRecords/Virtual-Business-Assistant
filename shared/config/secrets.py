@@ -1,10 +1,9 @@
-"""Gmail OAuth credentials configuration."""
 import json
 import os
 
 # Get the directory of the current file
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CREDENTIALS_PATH = os.path.join(CURRENT_DIR, '../resources/credentials.json')
+CREDENTIALS_PATH = os.path.join(CURRENT_DIR, '../../auth-service/src/resources/credentials.json')
 
 # Load credentials from the JSON file
 with open(CREDENTIALS_PATH) as f:
@@ -23,8 +22,4 @@ SCOPES = [
 ]
 
 # Token storage path
-TOKEN_PATH = os.path.join(CURRENT_DIR, '../resources/token.json')
-
-# Add this to your existing secrets.py
-OPENAI_API_KEY = "your-openai-api-key-here"  # Replace with your actual OpenAI API key
- 
+TOKEN_PATH = os.path.join(CURRENT_DIR, '../../auth-service/src/resources/token.json') 

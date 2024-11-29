@@ -1,1 +1,41 @@
- 
+# Deployment configuration
+environments:
+  production:
+    type: gpu
+    provider: vultr
+    instance: rtx-a6000
+    region: ewr  # New Jersey
+    specs:
+      cpu: 8
+      ram: 32GB
+      gpu: RTX A6000
+      storage: 256GB
+    ollama:
+      model: llama2
+      port: 11434
+    
+  staging:
+    type: standard
+    provider: vultr
+    instance: compute
+    region: ewr
+    specs:
+      cpu: 4
+      ram: 8GB
+      storage: 100GB
+
+deployment:
+  production:
+    branch: main
+    trigger: tag
+    requirements:
+      - tests passing
+      - security scan passing
+      - gpu tests passing
+      
+  staging:
+    branch: develop
+    trigger: push
+    requirements:
+      - tests passing
+      - security scan passing 

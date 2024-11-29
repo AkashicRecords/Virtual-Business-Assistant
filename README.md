@@ -1,109 +1,96 @@
 # Gmail Voice Assistant 🎤
 
-A voice-controlled Gmail client with a modern GUI interface that allows you to manage your Gmail using voice commands.
+A voice-controlled Gmail client with LLM integration that allows you to manage your Gmail using voice commands and AI assistance.
+
+## Architecture
+
+The application is built using a microservices architecture:
+
+### Services
+- **Voice Service**: Handles speech-to-text and voice commands
+- **LLM Service**: Manages AI/LLM interactions using local Ollama
+- **Gmail Service**: Handles Gmail API interactions
+
+### Core Components
+- Modern GUI with CustomTkinter
+- Real-time voice processing
+- Local LLM integration with Ollama
+- Gmail API integration
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- A Google Cloud Platform account
+- Google Cloud Platform account
 - Gmail account
+- Ollama with Llama2 model installed
 - macOS or Windows
 
-## Current Features
+## Quick Start
 
-- Voice-controlled email management
-- Modern GUI interface
-- Email composition window
-- Real-time voice recognition
-- Basic email commands (read, send, delete)
-- Command history display
-- Status indicators
-
-## Future Development
-For detailed information about upcoming features, planned integrations, and future development roadmap, see our [Upcoming Features](docs/upcoming_features.md) document.
-
-## Installation
-
-### 1. Clone and Setup
+1. **Install Dependencies**:
 ```bash
-# Clone the repository
-git clone [repository-url]
-cd gmail-voice-assistant
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-
-# Install the package
 pip install -e .
 ```
 
-### 2. Google API Setup
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable Gmail API:
-   - Navigate to "APIs & Services" > "Library"
-   - Search for "Gmail API"
-   - Click "Enable"
-4. Create OAuth 2.0 credentials:
-   - Go to "APIs & Services" > "Credentials"
-   - Click "Create Credentials" > "OAuth client ID"
-   - Choose "Desktop Application"
-   - Download the credentials JSON file
-   - Save as `gmail_assistant/resources/credentials.json`
+2. **Configure Services**:
+- Set up Google Cloud credentials
+- Install and start Ollama
+- Configure environment variables
 
-### 3. Run the Application
+3. **Run the Application**:
 ```bash
 gmail-assistant
 ```
 
-On first run:
-1. A browser window will open for Gmail authentication
-2. Sign in with your Google account
-3. Grant the requested permissions
-4. The application window will appear
-
-## Usage
+## Features
 
 ### Voice Commands
-- "Read email" - Reads your latest email
-- "Send email" - Opens email composition window
-- "Check inbox" - Lists recent emails
-- "Delete email" - Deletes the latest email
-- "Mark as read" - Marks latest email as read
-- "Help" - Lists all available commands
+- Email management (read, send, delete)
+- Smart search and filtering
+- Context-aware responses
 
-### GUI Features
-- Start/Stop listening button
-- Command output display
-- Email composition window
-- Status indicators
+### AI Features
+- Smart email composition
+- Content improvement suggestions
+- Context understanding
+- Natural language processing
+
+### Gmail Integration
+- Full Gmail API support
+- Real-time email monitoring
+- Thread management
 
 ## Development
 
-For development setup and contribution guidelines, see [Developer Documentation](docs/developer.md)
+### Service Development
+```bash
+# Start individual services
+python -m gmail_assistant.services.voice.api
+python -m gmail_assistant.services.llm.api
+python -m gmail_assistant.services.gmail.api
+```
 
-## Upcoming Features
+### Testing
+```bash
+pytest tests/
+```
 
-For information about upcoming features, development plans, and technical architecture, see our [Development Plans](docs/upcoming_features.md)
+## Contributing
 
-## Troubleshooting
-
-### Common Issues
-1. **Microphone not working**
-   - Check system microphone permissions
-   - Verify microphone is selected as input device
-
-2. **Authentication Issues**
-   - Ensure credentials.json is in the correct location
-   - Check Google Cloud Console for API enablement
-   - Delete token.pickle to re-authenticate
-
-3. **Installation Issues**
-   - Make sure all dependencies are installed
-   - Check Python version compatibility
-   - Verify virtual environment activation
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ## License
 
-[Your License Here]
+[Your License]
+
+## Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- pip
+- virtualenv (recommended)
+
+### Quick Install
+```bash
+# Create and activate virtual

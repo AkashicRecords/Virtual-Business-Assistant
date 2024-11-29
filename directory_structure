@@ -1,0 +1,17 @@
+mkdir -p gmail-assistant/{api-gateway,auth-service,email-service,llm-service,voice-service}/{src,tests}
+mkdir -p gmail-assistant/kubernetes
+touch gmail-assistant/docker-compose.yml
+touch gmail-assistant/README.md
+
+# Create Dockerfiles
+for service in api-gateway auth-service email-service llm-service voice-service; do
+    touch gmail-assistant/$service/Dockerfile
+    touch gmail-assistant/$service/requirements.txt
+    touch gmail-assistant/$service/src/__init__.py
+    touch gmail-assistant/$service/src/main.py
+done
+
+# Create Kubernetes configs
+for service in api-gateway auth-service email-service llm-service voice-service; do
+    touch gmail-assistant/kubernetes/$service.yaml
+done 

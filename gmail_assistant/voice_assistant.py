@@ -8,26 +8,47 @@ from googleapiclient.discovery import build
 import os
 import pickle
 import json
-from .utils import handle_errors, logger
-from .config import SCOPES, CREDENTIALS_PATH, TOKEN_PATH
+from .utils import handle_errors
+from .config.secrets import SCOPES, CREDENTIALS_PATH, TOKEN_PATH
+from .llm.service import LLMService
+from .voice_processing.service import VoiceProcessor
+from datetime import datetime
+from .utils.logger import logger
 
 class GmailVoiceAssistant:
     @handle_errors
     def __init__(self):
         logger.info("Initializing Gmail Voice Assistant")
-        self.recognizer = sr.Recognizer()
-        self.engine = pyttsx3.init()
-        self.credentials = None
-        self.service = None
-        self.setup_gmail_api()
-        self.commands = {
-            "read email": self.read_latest_email,
-            "send email": self.compose_email,
-            "check inbox": self.check_inbox,
-            "delete email": self.delete_latest_email,
-            "mark as read": self.mark_as_read,
-            "help": self.list_commands
-        }
+        try:
+            self.recognizer = sr.Recognizer()
+            self.engine = pyttsx3.init()
+            self.credentials = None
+            self.service = None
+            
+            logger.info("Setting up Gmail API...")
+            self.setup_gmail_api()
+            
+            logger.info("Initializing LLM service...")
+            self.llm_service = LLMService()
+            
+            logger.info("Initializing voice processor...")
+            self.voice_processor = VoiceProcessor()
+            
+            logger.info("Setting up commands...")
+            self.commands = {
+                "read email": self.read_latest_email,
+                "send email": self.compose_email,
+                "check inbox": self.check_inbox,
+                "delete email": self.delete_latest_email,
+                "mark as read": self.mark_as_read,
+                "help": self.list_commands
+            }
+            
+            logger.info("Voice assistant initialization complete")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize voice assistant: {str(e)}")
+            raise
 
     @handle_errors
     def setup_gmail_api(self):
@@ -40,8 +61,11 @@ class GmailVoiceAssistant:
             if self.credentials and self.credentials.expired and self.credentials.refresh_token:
                 self.credentials.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
-                self.credentials = flow.run_local_server(port=0)
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    CREDENTIALS_PATH, 
+                    SCOPES
+                )
+                self.credentials = flow.run_local_server(port=8080)
             with open(TOKEN_PATH, 'wb') as token:
                 pickle.dump(self.credentials, token)
 
@@ -51,41 +75,100 @@ class GmailVoiceAssistant:
     def listen(self):
         """Listen for voice commands"""
         logger.info("Listening for commands...")
-        with sr.Microphone() as source:
-            self.recognizer.adjust_for_ambient_noise(source)
-            audio = self.recognizer.listen(source)
-            try:
-                command = self.recognizer.recognize_google(audio).lower()
-                logger.info(f"Recognized command: {command}")
-                return command
-            except sr.UnknownValueError:
-                logger.warning("Could not understand audio")
-                return None
-            except sr.RequestError as e:
-                logger.error(f"Could not request results: {str(e)}")
-                return None
+        try:
+            with sr.Microphone() as source:
+                logger.debug("Microphone initialized")
+                logger.debug("Adjusting for ambient noise...")
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)
+                logger.info("Adjusted for ambient noise")
+                
+                self.speak("Listening...")
+                logger.debug("Waiting for audio input...")
+                
+                try:
+                    audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=5)
+                    logger.info("Audio captured successfully")
+                    
+                    # Process the command
+                    logger.debug("Processing captured audio...")
+                    return self.process_command(audio)
+                    
+                except sr.WaitTimeoutError:
+                    logger.warning("No audio input received (timeout)")
+                    self.speak("I didn't hear anything. Please try again.")
+                    return None
+                except Exception as e:
+                    logger.error(f"Error during audio capture: {str(e)}", exc_info=True)
+                    self.speak("Sorry, there was an error. Please try again.")
+                    return None
+                
+        except Exception as e:
+            logger.error(f"Critical error in listen method: {str(e)}", exc_info=True)
+            self.speak("Sorry, there was a problem with the microphone.")
+            return None
 
     @handle_errors
     def speak(self, text):
         """Convert text to speech"""
         logger.info(f"Speaking: {text}")
+        
+        # Get current engine properties
+        rate = self.engine.getProperty('rate')
+        
+        # Set the speaking rate to half the default speed
+        # Default is usually around 200 words per minute
+        self.engine.setProperty('rate', 100)  # Reduce to half speed
+        
         self.engine.say(text)
         self.engine.runAndWait()
 
     @handle_errors
-    def process_command(self, command):
-        """Process voice commands"""
-        if not command:
+    def process_command(self, audio_data):
+        """Process voice command"""
+        try:
+            # First try to get the text from the audio
+            result = self.voice_processor.process_audio(audio_data)
+            
+            if not result:
+                self.speak("I couldn't understand that. Please try again.")
+                return False
+            
+            logger.info(f"Processing command: {result.text}")
+            
+            # Check for direct command matches first
+            for command_phrase, command_func in self.commands.items():
+                if command_phrase in result.text:
+                    logger.info(f"Executing command: {command_phrase}")
+                    command_func()
+                    return True
+            
+            # If no direct match, use LLM analysis
+            analysis = self.llm_service.analyze_query(result.text)
+            logger.info(f"LLM analysis: {analysis}")
+            
+            if analysis['confidence'] > 0.7:
+                return self.handle_command(analysis)
+            
+            self.speak("I'm not sure what you want me to do. Could you rephrase that?")
             return False
+            
+        except Exception as e:
+            logger.error(f"Error processing command: {str(e)}")
+            self.speak("Sorry, there was an error processing your command.")
+            return False
+
+    def handle_command(self, analysis):
+        """Handle analyzed command"""
+        command_type = analysis['query_type']
+        params = analysis['parameters']
         
-        for key, func in self.commands.items():
-            if key in command:
-                logger.info(f"Executing command: {key}")
-                func()
-                return True
-        
-        self.speak("Command not recognized. Say 'help' for available commands.")
-        return False
+        if command_type == "email_read":
+            return self.read_latest_email()
+        elif command_type == "email_send":
+            return self.compose_email(params)
+        elif command_type == "email_search":
+            return self.search_emails(params)
+        # ... handle other command types ...
 
     @handle_errors
     def read_latest_email(self):

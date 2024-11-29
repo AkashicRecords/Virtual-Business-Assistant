@@ -4,7 +4,12 @@ from .auth_handler import AuthHandler
 from .command_processor import CommandProcessor
 from .error_handler import handle_errors, GmailAssistantError
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 import logging
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.tag import pos_tag
+from .llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +20,142 @@ class GmailVoiceAssistant:
         self.auth_handler = AuthHandler()
         self.command_processor = CommandProcessor()
         self.gmail_service = None
+        self.llm_service = LLMService()
+        
+        # Initialize and test all components
+        logger.info("Initializing Gmail Voice Assistant...")
+        self.test_nltk_components()
         self.setup_gmail_service()
+        self.test_api_endpoints()
+        self.test_voice_components()
+        self.test_nlu_processing()
+        logger.info("Initialization complete!")
+
+    def test_nltk_components(self):
+        """Test NLTK components and data availability."""
+        logger.info("Testing NLTK components...")
+        try:
+            # Download all required NLTK data first
+            nltk.download('punkt', quiet=True)
+            nltk.download('averaged_perceptron_tagger', quiet=True)
+            nltk.download('maxent_ne_chunker', quiet=True)
+            nltk.download('words', quiet=True)
+            
+            # Import tokenizer directly
+            from nltk.tokenize import word_tokenize, sent_tokenize
+            from nltk.tag import pos_tag
+            
+            # Test text
+            test_text = "Test email processing capabilities."
+            
+            # Test sentence tokenization first
+            sentences = sent_tokenize(test_text)
+            
+            # Then test word tokenization
+            for sentence in sentences:
+                tokens = word_tokenize(sentence)
+                pos_tags = pos_tag(tokens)
+            
+            logger.info("NLTK components test successful")
+            return True
+            
+        except Exception as e:
+            error_msg = f"NLTK components test failed: {str(e)}"
+            logger.error(error_msg)
+            raise GmailAssistantError(error_msg)
+
+    def test_voice_components(self):
+        """Test voice recognition and synthesis components."""
+        logger.info("Testing voice components...")
+        try:
+            # Test text-to-speech
+            self.engine.getProperty('voices')  # Test engine initialization
+            
+            # Test speech recognition initialization
+            with sr.Microphone() as source:
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)
+            
+            logger.info("Voice components test successful")
+            return True
+        except Exception as e:
+            error_msg = f"Voice components test failed: {str(e)}"
+            logger.error(error_msg)
+            raise GmailAssistantError(error_msg)
+
+    def test_nlu_processing(self):
+        """Test Natural Language Understanding processing."""
+        logger.info("Testing NLU processing...")
+        try:
+            # Test command parsing
+            test_commands = [
+                "read latest email",
+                "search for important messages",
+                "delete email from John"
+            ]
+            
+            for command in test_commands:
+                tokens = word_tokenize(command.lower())
+                pos_tags = pos_tag(tokens)
+                
+                # Verify command structure
+                verbs = [word for word, tag in pos_tags if tag.startswith('VB')]
+                if not verbs:
+                    raise GmailAssistantError(f"No verb found in command: {command}")
+                
+                # Test command recognition
+                self.command_processor.process_command(command)
+            
+            logger.info("NLU processing test successful")
+            return True
+        except Exception as e:
+            error_msg = f"NLU processing test failed: {str(e)}"
+            logger.error(error_msg)
+            raise GmailAssistantError(error_msg)
 
     @handle_errors
     def setup_gmail_service(self):
         """Initialize Gmail service with OAuth credentials."""
         creds = self.auth_handler.get_credentials()
         self.gmail_service = build('gmail', 'v1', credentials=creds)
+        self.command_processor.set_gmail_service(self.gmail_service)
+
+    @handle_errors
+    def test_api_endpoints(self):
+        """Test Gmail API endpoints to ensure they're working."""
+        logger.info("Testing Gmail API endpoints...")
+        
+        try:
+            # Test 1: Profile access
+            logger.info("Testing profile access...")
+            profile = self.gmail_service.users().getProfile(userId='me').execute()
+            logger.info(f"Profile access successful. Email: {profile['emailAddress']}")
+
+            # Test 2: Labels access
+            logger.info("Testing labels access...")
+            labels = self.gmail_service.users().labels().list(userId='me').execute()
+            logger.info(f"Labels access successful. Found {len(labels.get('labels', []))} labels")
+
+            # Test 3: Messages access
+            logger.info("Testing messages access...")
+            messages = self.gmail_service.users().messages().list(
+                userId='me', maxResults=1).execute()
+            if messages.get('messages', []):
+                logger.info("Messages access successful")
+            else:
+                logger.info("Messages access successful (no messages found)")
+
+            # Test 4: Draft access
+            logger.info("Testing drafts access...")
+            drafts = self.gmail_service.users().drafts().list(userId='me').execute()
+            logger.info("Drafts access successful")
+
+            logger.info("All API endpoint tests completed successfully!")
+            return True
+
+        except HttpError as error:
+            error_message = f"API endpoint test failed: {str(error)}"
+            logger.error(error_message)
+            raise GmailAssistantError(error_message)
 
     @handle_errors
     def listen(self):
@@ -48,7 +182,13 @@ class GmailVoiceAssistant:
 
     def process_command(self, command_text):
         """Process the recognized command."""
-        return self.command_processor.process_command(command_text)
+        # First try to identify if it's a specific email command
+        for cmd in self.command_processor.commands:
+            if cmd in command_text.lower():
+                return self.command_processor.process_command(command_text)
+        
+        # If not a specific command, treat as conversation
+        return self.llm_service.process_conversation(command_text)
 
     def run(self):
         """Main loop for voice assistant."""
