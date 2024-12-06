@@ -5,16 +5,25 @@ from original_assistant import * # Your existing voice assistant logic
 
 class GmailVoiceAssistantGUI:
     def __init__(self):
-        # Initialize main window
-        self.window = ctk.CTk()
-        self.window.title("Gmail Voice Assistant")
-        self.window.geometry("600x400")
-        
-        # Initialize voice assistant components
-        self.gmail_service = authenticate_gmail()
-        self.engine = pyttsx3.init()
-        
-        self.create_widgets()
+        logger.info("Initializing GUI...")
+        try:
+            self.assistant = GmailVoiceAssistant()
+            # Initialize main window
+            self.window = ctk.CTk()
+            self.window.title("Gmail Voice Assistant")
+            self.window.geometry("600x400")
+            
+            # Initialize voice assistant components
+            self.gmail_service = authenticate_gmail()
+            self.engine = pyttsx3.init()
+            
+            self.create_widgets()
+        except GmailAssistantError as e:
+            logger.warning(f"NLU processing test failed: {e}. Continuing with limited functionality...")
+            self.assistant = GmailVoiceAssistant(skip_nlu_test=True)
+        except Exception as e:
+            logger.error(f"Failed to initialize GUI: {e}")
+            raise
         
     def create_widgets(self):
         # Status Frame

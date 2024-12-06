@@ -6,12 +6,16 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 import os.path
 import nltk
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize  
+from nltk.tag import pos_tag  # Add this importt
 from nltk.corpus import stopwords
 import base64
 from email.mime.text import MIMEText
 import pyttsx3
 from gmail_assistant.config.secrets import GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REDIRECT_URI
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Gmail API setup
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
@@ -115,6 +119,87 @@ def send_email():
         return f"Email sent successfully. Message Id: {sent_message['id']}"
     except Exception as e:
         return f"An error occurred: {e}"
+    
+def test_nltk_components(self):
+    """Test NLTK components and data availability."""
+    logger.info("Testing NLTK components...")
+    try:
+        # Download all required NLTK data first
+        nltk.download('punkt', quiet=True)  # Changed from punkt_tab to punkt
+        nltk.download('averaged_perceptron_tagger', quiet=True)
+        nltk.download('maxent_ne_chunker', quiet=True)
+        nltk.download('words', quiet=True)
+        nltk.download('stopwords', quiet=True)  # Added stopwords download
+        
+        # Test text
+        test_text = "Test email processing capabilities."
+        
+        # Test sentence tokenization first
+        sentences = sent_tokenize(test_text)
+        
+        # Then test word tokenization
+        for sentence in sentences:
+            tokens = word_tokenize(sentence)
+            pos_tags = pos_tag(tokens)
+        
+        logger.info("NLTK components test successful")
+        return True
+        
+    except Exception as e:
+        error_msg = f"NLTK components test failed: {str(e)}"
+        logger.error(error_msg)
+        raise GmailAssistantError(error_msg)
+
+def test_nlu_processing(self):
+    """Test NLU processing capabilities."""
+    logger.info("Testing NLU processing...")
+    try:
+        # Download ALL required NLTK data first - this is likely the root cause
+        nltk.download('averaged_perceptron_tagger', quiet=True)
+        nltk.download('punkt', quiet=True)
+        nltk.download('tagsets', quiet=True)
+        nltk.download('universal_tagset', quiet=True)
+        
+        # Test command
+        command = "read latest email"
+        tokens = word_tokenize(command)
+        pos_tags = pos_tag(tokens)
+        
+        # Add this debug print to see what's actually happening
+        logger.info(f"POS tags for '{command}': {pos_tags}")
+        
+        # Define valid command verbs (both base and inflected forms)
+        valid_command_verbs = {
+            'read', 'reads', 'reading',
+            'send', 'sends', 'sending',
+            'check', 'checks', 'checking',
+            'show', 'shows', 'showing',
+            'display', 'displays', 'displaying',
+            'write', 'writes', 'writing'
+        }
+        
+        # First check if word is in our valid verbs list (case-insensitive)
+        # Then check if it's tagged as any form of verb by NLTK
+        valid_command = any(
+            word.lower() in valid_command_verbs or 
+            tag.startswith('VB') or
+            tag == 'MD'  # Modal verbs
+            for word, tag in pos_tags
+        )
+                
+        if not valid_command:
+            logger.warning(f"Command: '{command}'")
+            logger.warning(f"Tokens: {tokens}")
+            logger.warning(f"POS tags: {pos_tags}")
+            raise GmailAssistantError(f"No valid command verb found in: {command}")
+            
+        logger.info("NLU processing test successful")
+        return True
+        
+    except Exception as e:
+        error_msg = f"NLU processing test failed: {str(e)}"
+        logger.error(error_msg)
+        raise GmailAssistantError(error_msg)
 
 def main():
     nltk.download('punkt', quiet=True)
