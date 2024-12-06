@@ -1,39 +1,28 @@
 # Developer Documentation
 
 ## Setup Development Environment
-
-1. Clone the repository:
-```bash
-git clone [repository-url]
-cd gmail-voice-assistant
-```
-
-2. Install dependencies:
-```bash
-pip install -e .
-```
-
-3. Run tests:
-```bash
-python -m pytest tests/
-```
-
-4. Build application:
-```bash
-./build.sh
-```
+1. Clone repository
+2. Install dependencies
+3. Configure services
+4. Run tests
 
 ## Project Structure
 ```
-gmail-voice-assistant/
-├── gmail_assistant/
-│   ├── __init__.py
-│   ├── gui.py
-│   ├── voice_assistant.py
-│   └── resources/
+gmail-assistant/
+├── services/
+│   ├── email_service.py
+│   ├── llm_service.py
+│   └── voice_service.py
+├── gui/
+│   └── main_window.py
 ├── tests/
-│   └── test_package.py
-├── build.py
-├── build.sh
-└── setup.py
-``` 
+│   └── test_*.py
+└── config/
+    └── settings.py
+```
+
+## Development Guidelines
+- Code Style: PEP 8
+- Documentation: Google style docstrings
+- Testing: pytest
+- Logging: structured logging
